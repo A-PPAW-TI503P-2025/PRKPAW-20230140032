@@ -1,7 +1,7 @@
 {
   "development": {
     "username": "root",
-    "password": "@Ookwlan24",
+    "password": "ookwlan24",
     "database": "praktikum_20230140032_db",
     "host": "127.0.0.1",
     "port": 3307,

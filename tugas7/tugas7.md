@@ -1,10 +1,10 @@
 # Tugas 7
 
 1. Tampilan Login
-![Tampilan Endpoint POST](SS/login.png)
+![Tampilan login](SS/login.png)
 
 2. Tampilan Register
-![Tampilan Endpoint POST](SS/register.png)
+![Tampilan register](SS/register.png)
 
 3. Tampilan Dashboarad
-![Tampilan Endpoint POST](SS/dashboard.png)
+![Tampilan dashboard](SS/dashboard.png)

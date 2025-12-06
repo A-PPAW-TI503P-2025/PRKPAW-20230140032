@@ -2,11 +2,42 @@ const { Presensi, User } = require("../models");
 const { format } = require("date-fns-tz");
 const timeZone = "Asia/Jakarta";
 
+// --- Import Multer & Path ---
+const multer = require('multer');
+const path = require('path');
+
+// --- Konfigurasi Penyimpanan File (Multer) ---
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); // Folder penyimpanan
+    },
+    filename: (req, file, cb) => {
+        // Format nama file: userId-timestamp.extensi
+        cb(null, `${req.user.id}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+// --- Filter File (Hanya Gambar) ---
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Hanya file gambar yang diperbolehkan!'), false);
+    }
+};
+
+// Export middleware upload
+exports.upload = multer({ storage: storage, fileFilter: fileFilter });
+
+// --- FUNGSI CHECK-IN ---
 exports.CheckIn = async (req, res) => {
   try {
     const { id: userId, nama: userName } = req.user;
     const waktuSekarang = new Date();
     const { latitude, longitude } = req.body;
+
+    // Ambil path foto dari request (jika ada)
+    const buktiFoto = req.file ? req.file.path : null;
 
     const existingRecord = await Presensi.findOne({
       where: { userId: userId, checkOut: null },
@@ -17,11 +48,13 @@ exports.CheckIn = async (req, res) => {
         .status(400)
         .json({ message: "Anda sudah melakukan check-in hari ini." });
     }
+
     const newRecord = await Presensi.create({
       userId: userId,
       checkIn: waktuSekarang,
       latitude: latitude || null,
       longitude: longitude || null,
+      buktiFoto: buktiFoto // Simpan ke database
     });
 
     res.status(201).json({
@@ -38,6 +71,8 @@ exports.CheckIn = async (req, res) => {
       .json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
 };
+
+// --- FUNGSI LAINNYA ---
 
 exports.CheckOut = async (req, res) => {
   try {
@@ -120,7 +155,6 @@ exports.updatePresensi = async (req, res) => {
 
     recordToUpdate.checkIn = checkIn || recordToUpdate.checkIn;
     recordToUpdate.checkOut = checkOut || recordToUpdate.checkOut;
-    // recordToUpdate.nama = nama || recordToUpdate.nama;
 
     await recordToUpdate.save();
 

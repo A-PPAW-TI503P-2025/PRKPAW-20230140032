@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
+import Webcam from "react-webcam";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
-// NOTE: jika marker default tidak muncul karena masalah icon di build, kita bisa
-// menambahkan override icon di file index.js. Aku tidak paksa di sini supaya tetap sederhana.
 
 function PresensiPage() {
   const [coords, setCoords] = useState(null);
@@ -13,8 +11,16 @@ function PresensiPage() {
   const [loadingAction, setLoadingAction] = useState(false);
   const [message, setMessage] = useState(null);
 
+  // --- STATE KAMERA ---
+  const [image, setImage] = useState(null);
+  const webcamRef = useRef(null);
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImage(imageSrc);
+  }, [webcamRef]);
+
   useEffect(() => {
-    // ambil lokasi saat komponen mount
     if (!navigator.geolocation) {
       setError("Geolocation tidak didukung oleh browser ini.");
       setLoadingLocation(false);
@@ -38,28 +44,34 @@ function PresensiPage() {
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
     return {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
-      },
+      headers: { Authorization: token ? `Bearer ${token}` : "" },
     };
   };
 
   const handleCheckIn = async () => {
     setMessage(null);
     setError(null);
+
     if (!coords) {
       setError("Lokasi belum didapatkan. Mohon izinkan akses lokasi.");
+      return;
+    }
+    if (!image) {
+      setError("Wajib mengambil foto selfie sebelum Check-In!");
       return;
     }
 
     setLoadingAction(true);
     try {
+      const blob = await (await fetch(image)).blob();
+      const formData = new FormData();
+      formData.append("latitude", coords.lat);
+      formData.append("longitude", coords.lng);
+      formData.append("image", blob, "selfie.jpg");
+
       const response = await axios.post(
         "http://localhost:3001/api/presensi/check-in",
-        {
-          latitude: coords.lat,
-          longitude: coords.lng,
-        },
+        formData,
         getAuthConfig()
       );
 
@@ -67,12 +79,10 @@ function PresensiPage() {
         type: "success",
         text: response.data?.message || "Check-in berhasil",
       });
+      // setImage(null); // Uncomment jika ingin reset foto otomatis
     } catch (err) {
       console.error(err);
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Gagal melakukan check-in.";
+      const msg = err.response?.data?.message || err.message || "Gagal melakukan check-in.";
       setError(msg);
     } finally {
       setLoadingAction(false);
@@ -104,10 +114,12 @@ function PresensiPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-10">
-      <div className="max-w-6xl mx-auto px-4 pt-6">
-        <h1 className="text-2xl font-semibold text-gray-800 mb-4">Presensi Lokasi</h1>
+      <div className="max-w-6xl mx-auto px-4 pt-6"> {/* KEMBALI LEBAR (6xl) */}
+        <h1 className="text-2xl font-semibold text-gray-800 mb-4">
+          Presensi Lokasi
+        </h1>
 
-        {/* Peta Card */}
+        {/* PETA (Tetap Lebar seperti awal) */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
           <div style={{ height: 320, width: "100%" }}>
             {coords ? (
@@ -118,7 +130,7 @@ function PresensiPage() {
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution="&copy; OpenStreetMap contributors"
+                  attribution='&copy; OpenStreetMap contributors'
                 />
                 <Marker position={[coords.lat, coords.lng]}>
                   <Popup>Lokasi Presensi Anda</Popup>
@@ -132,12 +144,46 @@ function PresensiPage() {
           </div>
         </div>
 
-        {/* Card Kontrol */}
+        {/* CARD KONTROL & KAMERA (Di Bawah Peta, di tengah) */}
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-            <h2 className="text-xl font-bold mb-2">Lakukan Presensi</h2>
+            <h2 className="text-xl font-bold mb-4">Ambil Selfie</h2>
 
-            {/* status message */}
+            {/* AREA KAMERA (Diselipkan di sini) */}
+            <div className="mb-4 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-black relative">
+              {image ? (
+                <img src={image} alt="Selfie" className="w-full h-64 object-cover" />
+              ) : (
+                <Webcam
+                  audio={false}
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  className="w-full h-64 object-cover"
+                  videoConstraints={{ facingMode: "user" }}
+                />
+              )}
+            </div>
+
+            {/* TOMBOL KAMERA */}
+            <div className="mb-6">
+              {!image ? (
+                <button
+                  onClick={capture}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full w-full font-medium transition"
+                >
+                  📸 Ambil Foto
+                </button>
+              ) : (
+                <button
+                  onClick={() => setImage(null)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full w-full font-medium transition"
+                >
+                  🔄 Foto Ulang
+                </button>
+              )}
+            </div>
+
+            {/* PESAN STATUS */}
             {message && (
               <div
                 className={`mb-3 text-sm px-3 py-2 rounded ${
@@ -156,16 +202,22 @@ function PresensiPage() {
               </div>
             )}
 
+            {/* DATA KOORDINAT */}
             <div className="text-sm text-gray-600 mb-4">
               <p>Latitude: <span className="font-medium">{coords?.lat ?? "-"}</span></p>
               <p>Longitude: <span className="font-medium">{coords?.lng ?? "-"}</span></p>
             </div>
 
+            {/* TOMBOL ACTION */}
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={handleCheckIn}
-                disabled={loadingAction}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm disabled:opacity-60"
+                disabled={loadingAction || !image}
+                className={`px-5 py-2.5 rounded-lg shadow-sm text-white font-medium flex-1 ${
+                  !image 
+                  ? "bg-gray-300 cursor-not-allowed" 
+                  : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
               >
                 {loadingAction ? "Memproses..." : "Check In"}
               </button>
@@ -173,7 +225,7 @@ function PresensiPage() {
               <button
                 onClick={handleCheckOut}
                 disabled={loadingAction}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm disabled:opacity-60"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm flex-1 font-medium"
               >
                 {loadingAction ? "Memproses..." : "Check Out"}
               </button>

@@ -17,7 +17,8 @@ module.exports = (sequelize, DataTypes) => {
     checkIn: DataTypes.DATE,
     checkOut: DataTypes.DATE,
     latitude: DataTypes.DECIMAL(10, 8),
-    longitude: DataTypes.DECIMAL(11, 8)
+    longitude: DataTypes.DECIMAL(11, 8),
+    buktiFoto: DataTypes.STRING
   },
   {
     sequelize,

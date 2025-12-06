@@ -5,9 +5,15 @@ const presensiController = require('../controllers/presensiController');
 const { authenticateToken, isAdmin } = require('../middleware/permissionMiddleware');
 const { body, validationResult } = require('express-validator');
 
+// Middleware autentikasi berlaku untuk semua route di bawah ini
 router.use(authenticateToken);
-router.post('/check-in', presensiController.CheckIn);
+
+// --- UPDATE DI SINI ---
+// Tambahkan presensiController.upload.single('image') sebelum controller CheckIn
+router.post('/check-in', presensiController.upload.single('image'), presensiController.CheckIn);
+
 router.post('/check-out', presensiController.CheckOut);
+
 router.put(
   '/:id',
   [

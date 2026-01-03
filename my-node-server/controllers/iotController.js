@@ -1,20 +1,11 @@
-// controllers/iotController.js
-const { SensorLog } = require('../models'); // <-- PENTING: Import Model SensorLog
+const { SensorLog } = require('../models'); // <-- Impor Model SensorLog
 
-// 1. Fungsi Test Koneksi (Ping)
-exports.testConnection = (req, res) => {
-  const { message, deviceId } = req.body;
-  console.log(`📡 [IOT] Pesan dari ${deviceId}: ${message}`);
-  res.status(200).json({ status: "ok", reply: "Server menerima koneksi!" });
-};
-
-// 2. Fungsi Menerima Data Sensor (UPDATE BARU)
 exports.receiveSensorData = async (req, res) => {
   try {
-    // Tangkap data dari body request (dikirim oleh ESP32)
+    // 1. Tangkap data dari body request (dikirim oleh ESP32)
     const { suhu, kelembaban, cahaya } = req.body;
 
-    // Validasi sederhana
+    // 2. Validasi sederhana (opsional tapi disarankan)
     if (suhu === undefined || kelembaban === undefined) {
       return res.status(400).json({ 
         status: "error", 
@@ -22,7 +13,7 @@ exports.receiveSensorData = async (req, res) => {
       });
     }
 
-    // Simpan ke Database
+    // 3. Simpan ke Database
     const newData = await SensorLog.create({
       suhu: parseFloat(suhu),
       kelembaban: parseFloat(kelembaban),
@@ -32,7 +23,7 @@ exports.receiveSensorData = async (req, res) => {
     // Log agar terlihat di terminal
     console.log(`💾 [SAVED] Suhu: ${suhu}°C | Lembab: ${kelembaban}% | Cahaya: ${cahaya}`);
 
-    // Beri respon sukses ke ESP32
+    // 4. Beri respon sukses ke ESP32
     res.status(201).json({ status: "ok", message: "Data berhasil disimpan" });
 
   } catch (error) {
@@ -41,7 +32,7 @@ exports.receiveSensorData = async (req, res) => {
   }
 };
 
-// 3. Fungsi Mengambil Riwayat Data untuk Frontend
+
 exports.getSensorHistory = async (req, res) => {
   try {
     // Ambil 20 data terakhir, diurutkan dari yang paling baru

@@ -1,8 +1,8 @@
 #Tugas 14
 
 1. Tampilan  sensorlog
-![Tampilan checkin](ss/sensor.jpeg)
+![Tampilan sensor](ss/sensor.png)
 
 
 2. Tampilan  database
-![Tampilan checkin](ss/database.jpeg)
+![Tampilan database](ss/database.png)

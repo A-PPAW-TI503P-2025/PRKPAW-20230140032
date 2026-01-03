@@ -20,12 +20,20 @@ function PresensiPage() {
     setImage(imageSrc);
   }, [webcamRef]);
 
+  // --- PERBAIKAN LOKASI DISINI ---
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation tidak didukung oleh browser ini.");
       setLoadingLocation(false);
       return;
     }
+
+    // Opsi agar tidak timeout (HighAccuracy dimatikan dulu biar lancar di laptop)
+    const geoOptions = {
+      enableHighAccuracy: false, 
+      timeout: 30000, 
+      maximumAge: 0 
+    };
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -34,10 +42,11 @@ function PresensiPage() {
         setLoadingLocation(false);
       },
       (err) => {
+        console.warn("Error Geolocation:", err);
         setError("Gagal mendapatkan lokasi: " + err.message);
         setLoadingLocation(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      geoOptions
     );
   }, []);
 
@@ -114,12 +123,12 @@ function PresensiPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 pb-10">
-      <div className="max-w-6xl mx-auto px-4 pt-6"> {/* KEMBALI LEBAR (6xl) */}
+      <div className="max-w-6xl mx-auto px-4 pt-6">
         <h1 className="text-2xl font-semibold text-gray-800 mb-4">
           Presensi Lokasi
         </h1>
 
-        {/* PETA (Tetap Lebar seperti awal) */}
+        {/* PETA */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
           <div style={{ height: 320, width: "100%" }}>
             {coords ? (
@@ -144,12 +153,12 @@ function PresensiPage() {
           </div>
         </div>
 
-        {/* CARD KONTROL & KAMERA (Di Bawah Peta, di tengah) */}
+        {/* CARD KONTROL & KAMERA */}
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
             <h2 className="text-xl font-bold mb-4">Ambil Selfie</h2>
 
-            {/* AREA KAMERA (Diselipkan di sini) */}
+            {/* AREA KAMERA */}
             <div className="mb-4 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-black relative">
               {image ? (
                 <img src={image} alt="Selfie" className="w-full h-64 object-cover" />

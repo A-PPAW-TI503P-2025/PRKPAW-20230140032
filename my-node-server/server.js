@@ -4,6 +4,8 @@ const path = require('path');
 const app = express();
 const PORT = 3001;
 const morgan = require("morgan");
+const iotRoutes = require("./routes/iot");
+app.use("/api/iot", iotRoutes);
 
 // Folder uploads agar bisa diakses browser [cite: 63]
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

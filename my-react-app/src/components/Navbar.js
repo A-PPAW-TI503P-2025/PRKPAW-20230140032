@@ -7,7 +7,8 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  
+  // LOGIKA USER & LOGOUT
   let user = null;
   const token = localStorage.getItem("token");
   if (token) {
@@ -44,6 +45,7 @@ function Navbar() {
             </Link>
           </div>
 
+          {/* MENU DESKTOP */}
           <div className="hidden md:flex items-center space-x-3">
             <Link
               to="/dashboard"
@@ -61,6 +63,16 @@ function Navbar() {
               }`}
             >
               Presensi
+            </Link>
+
+            {/* --- LINK MONITORING SUHU DITAMBAHKAN DI SINI --- */}
+            <Link
+              to="/monitoring"
+              className={`px-6 py-2.5 rounded-full font-medium transition-all ${
+                isActive("/monitoring") ? activeClass : inactiveClass
+              }`}
+            >
+              Monitoring Suhu
             </Link>
 
             {user.role === "admin" && (
@@ -106,6 +118,7 @@ function Navbar() {
         </div>
       </div>
 
+      {/* MENU MOBILE */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200">
           <div className="px-4 py-5 space-y-3">
@@ -125,6 +138,12 @@ function Navbar() {
             <Link to="/attendance" onClick={() => setMobileMenuOpen(false)} className="block px-6 py-3 rounded-full font-medium">
               Presensi
             </Link>
+            
+            {/* LINK MONITORING SUHU (MOBILE) */}
+            <Link to="/monitoring" onClick={() => setMobileMenuOpen(false)} className="block px-6 py-3 rounded-full font-medium">
+              Monitoring Suhu
+            </Link>
+
             {user.role === "admin" && (
               <Link to="/reports" onClick={() => setMobileMenuOpen(false)} className="block px-6 py-3 rounded-full font-medium">
                 Laporan Admin

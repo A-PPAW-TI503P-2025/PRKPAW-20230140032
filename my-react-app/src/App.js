@@ -5,6 +5,7 @@ import RegisterPage from "./components/RegisterPage";
 import DashboardPage from "./components/DashboardPage";
 import PresensiPage from "./components/PresensiPage";
 import ReportPage from "./components/ReportPage";
+import SensorPage from "./components/SensorPage"; 
 import Navbar from "./components/Navbar";
 import "leaflet/dist/leaflet.css";
 
@@ -26,9 +27,12 @@ function App() {
         <Route path="/dashboard" element={<MainLayout><DashboardPage /></MainLayout>} />
         <Route path="/attendance" element={<MainLayout><PresensiPage /></MainLayout>} />
         <Route path="/reports" element={<MainLayout><ReportPage /></MainLayout>} />
+        <Route path="/monitoring" element={<MainLayout><SensorPage /></MainLayout>} />
+
         <Route path="/" element={<LoginPage />} />
       </Routes>
     </Router>
   );
 }
+
 export default App;
